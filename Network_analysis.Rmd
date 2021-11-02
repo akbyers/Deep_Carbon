@@ -1,0 +1,320 @@
+---
+title: "Network analysis"
+author: "Alexa Byers"
+date: "04/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+##following methods as outlined by Mundra et al.(2021). doi:10.1093/femsec/fiab022 
+```{r load packages, message=FALSE, warning=FALSE}
+library(devtools)
+#install_github("zdk123/SpiecEasi")
+library(SpiecEasi)
+library(igraph)
+library(Matrix)
+library(ggplot2)
+#if(!"RCy3" %in% installed.packages()){
+    #install.packages("BiocManager")
+    #BiocManager::install("RCy3")
+#}
+library(RCy3)
+```
+
+##read in data. Sample X genus tables of topsoil and subsoil (16S and ITS genera are in same dataframe)
+##ASVs with sum 0.5% in atleast 10% samples
+```{r read in data}
+Topsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Topsoil_core_genera.csv") 
+Subsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Subsoil_core_genera.csv") 
+Allsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Allsoil_core_genera.csv") 
+
+rownames(Topsoil_core) = Topsoil_core$Row.names
+Topsoil_core = Topsoil_core[,-1:-2]
+Topsoil_core[is.na(Topsoil_core)] <- 0 #replace NA with 0
+Topsoil_core <- as.matrix(Topsoil_core)
+
+rownames(Subsoil_core) = Subsoil_core$Row.names
+Subsoil_core = Subsoil_core[,-1:-2]
+Subsoil_core[is.na(Subsoil_core)] <- 0 #replace NA with 0
+Subsoil_core <- as.matrix(Subsoil_core)
+```
+##SPIEC-EASI models
+```{r}
+Topsoil.se <- spiec.easi(Topsoil_core, method='mb', lambda.min.ratio=1e-1, nlambda=20, pulsar.params=list(rep.num=50), sel.criterion='bstars')
+Subsoil.se <- spiec.easi(Subsoil_core, method='mb', lambda.min.ratio=1e-1, nlambda=20, pulsar.params=list(rep.num=50), sel.criterion='bstars')
+```
+
+#create igraph objects
+#topsoil interkingdom
+```{r}
+Topsoil.cor  <- symBeta(getOptBeta(Topsoil.se), mode='maxabs')
+Topsoil.weighted.adj.mat <- Topsoil.cor*getRefit(Topsoil.se)
+Topsoil.gl <- adj2igraph(Topsoil.weighted.adj.mat, vertex.attr = list(name=colnames(Topsoil_core)), diag = FALSE)
+Topsoil.gl <- Topsoil.gl - E(Topsoil.gl)[E(Topsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Topsoil.gl)$weight) #range of edge weights
+Topsoil.vsize   <- rowMeans(clr(Topsoil_core, 1))+6
+TS.coord <- layout.fruchterman.reingold(Topsoil.gl)
+
+Topsoil.gl2 <- Topsoil.gl
+V(Topsoil.gl2)$name[1:5] <- c("Archaea")
+V(Topsoil.gl2)$name[6:254] <- c("Bacteria")
+V(Topsoil.gl2)$name[255:399] <- c("Fungi") #setting vertex attributes for plotting
+
+V(Topsoil.gl2)$colour[1:5] <- c("red")
+V(Topsoil.gl2)$colour[6:254] <- c("blue")
+V(Topsoil.gl2)$colour[255:399] <- c("yellow") #setting vertex attributes for plotting
+
+
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Topsoil_interkingdom.png", width = 900, height = 900)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_interkingdom.png", width = 600, height = 600)
+plot(Topsoil.gl2, layout=TS.coord, vertex.size=Topsoil.vsize, main="(A) Topsoil interkingdom", edge.width=E(Topsoil.gl2)$weight, vertex.color= V(Topsoil.gl2)$colour, vertex.label=NA, edge.color="black")
+```
+# subsoil interkingdom
+```{r}
+Subsoil.cor  <- symBeta(getOptBeta(Subsoil.se), mode='maxabs')
+Subsoil.weighted.adj.mat <- Subsoil.cor*getRefit(Subsoil.se)
+Subsoil.gl <- adj2igraph(Subsoil.weighted.adj.mat, vertex.attr = list(name=colnames(Subsoil_core)), diag = FALSE)
+Subsoil.gl <- Subsoil.gl - E(Subsoil.gl)[E(Subsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Subsoil.gl)$weight) #range of edge weights
+Subsoil.vsize   <- rowMeans(clr(Subsoil_core, 1))+6
+SS.coord <- layout.fruchterman.reingold(Subsoil.gl)
+
+Subsoil.gl2 <- Subsoil.gl
+V(Subsoil.gl2)$name[1:6] <- c("Archaea")
+V(Subsoil.gl2)$name[7:178] <- c("Bacteria")
+V(Subsoil.gl2)$name[179:209] <- c("Fungi") #setting vertex attributes for plotting
+
+V(Subsoil.gl2)$colour[1:6] <- c("red")
+V(Subsoil.gl2)$colour[7:178] <- c("blue")
+V(Subsoil.gl2)$colour[179:209] <- c("yellow") #setting vertex attributes for plotting
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Subsoil_interkingdom.png", width = 900, height = 900)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_interkingdom.png", width = 600, height = 600)
+plot(Subsoil.gl2, layout=SS.coord, vertex.size=Subsoil.vsize, main="(B) Subsoil interkingdom", edge.width=E(Subsoil.gl)$weight, vertex.color= V(Subsoil.gl2)$colour, vertex.label=NA, edge.color="black")
+```
+
+
+##running models on bacteria and fungi separately
+```{r}
+Fungi_topsoil <- Topsoil_core[,255:399]
+Bacteria_topsoil <- Topsoil_core[,1:254]
+
+Fungi_subsoil <- Subsoil_core[,179:209]
+Bacteria_subsoil <- Subsoil_core[,1:178]
+```
+```{r}
+Fungi_topsoil.SE <- spiec.easi(Fungi_topsoil, method='mb', lambda.min.ratio=1e-1, nlambda=20, sel.criterion='bstars', pulsar.params=list(rep.num=50))
+Bacteria_topsoil.SE <- spiec.easi(Bacteria_topsoil, method='mb', lambda.min.ratio=1e-1, nlambda=20, sel.criterion='bstars', pulsar.params=list(rep.num=50)) 
+
+Fungi_subsoil.SE <- spiec.easi(Fungi_subsoil, method='mb', lambda.min.ratio=1e-1, nlambda=20, pulsar.params=list(rep.num=50), sel.criterion='bstars')
+Bacteria_subsoil.SE <- spiec.easi(Bacteria_subsoil, method='mb', lambda.min.ratio=1e-1, sel.criterion='bstars', nlambda=20, pulsar.params=list(rep.num=50))
+```
+
+#create igraph objects
+#fungi
+```{r}
+Fungi_topsoil.cor  <- symBeta(getOptBeta(Fungi_topsoil.SE), mode='maxabs')
+Fungi_topsoil.adjMat <- Fungi_topsoil.cor*getRefit(Fungi_topsoil.SE)
+Fungi_topsoil.gl <- adj2igraph(Fungi_topsoil.adjMat, vertex.attr = list(name=colnames(Fungi_topsoil)), diag = FALSE)
+Fungi_topsoil.gl <- Fungi_topsoil.gl - E(Fungi_topsoil.gl)[E(Fungi_topsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Fungi_topsoil.gl)$weight) #range of edge weights
+Fungi_topsoil.vsize   <- rowMeans(clr(Fungi_topsoil, 1))+6
+F_TS.coord <- layout.fruchterman.reingold(Fungi_topsoil.gl)
+V(Fungi_topsoil.gl)$colour <- c("yellow") 
+
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Fungal_topsoil.png", width = 700, height = 700)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_fungi.png", width = 600, height = 600)
+plot(Fungi_topsoil.gl, layout=F_TS.coord, vertex.size=Fungi_topsoil.vsize, main="(E) Topsoil fungi", edge.width=E(Fungi_topsoil.gl)$weight, vertex.label = NA,  vertex.color="yellow", edge.color="black")
+
+Fungi_subsoil.cor  <- symBeta(getOptBeta(Fungi_subsoil.SE), mode='maxabs')
+Fungi_subsoil.adjMat <- Fungi_subsoil.cor*getRefit(Fungi_subsoil.SE)
+Fungi_subsoil.gl <- adj2igraph(Fungi_subsoil.adjMat, vertex.attr = list(name=colnames(Fungi_subsoil)), diag = FALSE)
+Fungi_subsoil.gl <- Fungi_subsoil.gl - E(Fungi_subsoil.gl)[E(Fungi_subsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Fungi_subsoil.gl)$weight) #range of edge weights
+Fungi_subsoil.vsize   <- rowMeans(clr(Fungi_subsoil, 1))+6
+F_TS.coord <- layout.fruchterman.reingold(Fungi_subsoil.gl)
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Fungal_subsoil.png", width = 700, height = 700)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_fungi.png", width = 600, height = 600)
+plot(Fungi_subsoil.gl, layout=F_TS.coord, vertex.size=Fungi_subsoil.vsize, main="(F) Subsoil fungi", edge.width=E(Fungi_subsoil.gl)$weight, vertex.label = NA,  vertex.color="yellow", edge.color="black")
+```
+#bacteria
+```{r}
+Bacteria_topsoil.cor  <- symBeta(getOptBeta(Bacteria_topsoil.SE), mode='maxabs')
+Bacteria_topsoil.adjMat <- Bacteria_topsoil.cor*getRefit(Bacteria_topsoil.SE)
+Bacteria_topsoil.gl <- adj2igraph(Bacteria_topsoil.adjMat, vertex.attr = list(name=colnames(Bacteria_topsoil)), diag = FALSE)
+Bacteria_topsoil.gl <- Bacteria_topsoil.gl - E(Bacteria_topsoil.gl)[E(Bacteria_topsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Bacteria_topsoil.gl)$weight) #range of edge weights
+Bacteria_topsoil.vsize   <- rowMeans(clr(Bacteria_topsoil, 1))+6
+F_TS.coord <- layout.fruchterman.reingold(Bacteria_topsoil.gl)
+
+Bacteria_topsoil.gl2 <- Bacteria_topsoil.gl
+V(Bacteria_topsoil.gl2)$name[1:5] <- c("Archaea")
+V(Bacteria_topsoil.gl2)$name[6:254] <- c("Bacteria")
+
+V(Bacteria_topsoil.gl2)$colour[1:5] <- c("red")
+V(Bacteria_topsoil.gl2)$colour[6:254] <- c("blue")
+
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Bacteria_topsoil.png", width = 700, height = 700)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_bacteria.png", width = 600, height = 600)
+plot(Bacteria_topsoil.gl2, layout=F_TS.coord, vertex.size=Bacteria_topsoil.vsize, main="(C) Bacteria topsoil", edge.width=E(Bacteria_topsoil.gl2)$weight, vertex.label= NA, vertex.color=V(Bacteria_topsoil.gl2)$colour, edge.color="black")
+
+Bacteria_subsoil.cor  <- symBeta(getOptBeta(Bacteria_subsoil.SE), mode='maxabs')
+Bacteria_subsoil.adjMat <- Bacteria_subsoil.cor*getRefit(Bacteria_subsoil.SE)
+Bacteria_subsoil.gl <- adj2igraph(Bacteria_subsoil.adjMat, vertex.attr = list(name=colnames(Bacteria_subsoil)), diag = FALSE)
+Bacteria_subsoil.gl <- Bacteria_subsoil.gl - E(Bacteria_subsoil.gl)[E(Bacteria_subsoil.gl)$weight < 0] # -> exclude negative edge weights 
+range(E(Bacteria_subsoil.gl)$weight) #range of edge weights
+Bacteria_subsoil.vsize   <- rowMeans(clr(Bacteria_subsoil, 1))+6
+F_TS.coord <- layout.fruchterman.reingold(Bacteria_subsoil.gl)
+
+Bacteria_topsoil.gl2 <- Bacteria_topsoil.gl
+V(Bacteria_subsoil.gl2)$name[1:6] <- c("Archaea")
+V(Bacteria_subsoil.gl2)$name[7:178] <- c("Bacteria")
+
+V(Bacteria_subsoil.gl2)$colour[1:6] <- c("red")
+V(Bacteria_subsoil.gl2)$colour[7:178] <- c("blue")
+
+#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Bacteria_subsoil.png", width = 700, height = 700)
+png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_bacteria.png", width = 600, height = 600)
+plot(Bacteria_subsoil.gl2, layout=F_TS.coord, vertex.size=Bacteria_subsoil.vsize, vertex.label = NA, main="(D) Bacteria subsoil", edge.width=E(Bacteria_subsoil.gl2)$weight, vertex.color=V(Bacteria_subsoil.gl2)$colour, edge.color="black")
+```
+
+
+##exporting igraph objects for use in Cytoscape. Need to have Cytoscape installed on your computer for this function
+#it will send your iGraph object to Cytoscape directly
+#exporting to Cytoscape to calculate network statistics, however this can also be done in igraph
+```{r}
+createNetworkFromIgraph(Topsoil.gl,"Topsoil_iGraph2")
+createNetworkFromIgraph(Subsoil.gl,"Subsoil_iGraph2")
+createNetworkFromIgraph(Fungi_topsoil.gl,"FungiTopsoil_iGraph2")
+createNetworkFromIgraph(Bacteria_topsoil.gl,"BacteriaTopsoil_iGraph2")
+createNetworkFromIgraph(Fungi_subsoil.gl,"FungiSubsoil_iGraph2")
+createNetworkFromIgraph(Bacteria_subsoil.gl,"BacteriaSubsoil_iGraph2")
+```
+
+##read in data file for stats summaries and tests
+##network analysis was conducted in Cytoscape
+```{r}
+NetworkSummaryData <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Network stats/Net_summary_R.csv")
+NetworkSummaryData$Soil.layer <- as.factor(NetworkSummaryData$Soil.layer)
+NetworkSummaryData$Soil.layer <- factor(NetworkSummaryData$Soil.layer, levels = c("Topsoil", "Subsoil"))
+NetworkSummaryData_IK <- subset(NetworkSummaryData, Kingdom == "Interkingdom")
+NetworkSummaryData_16S <- subset(NetworkSummaryData, Kingdom == "Bacteria")
+NetworkSummaryData_ITS <- subset(NetworkSummaryData, Kingdom == "Fungi")
+```
+
+##MANN WHITNEY WILCOXON TESTS
+```{r}
+wilcox.test(Degree ~ Soil.layer, data = NetworkSummaryData_IK, paired= FALSE) 
+wilcox.test(AverageShortestPathLength ~ Soil.layer, data = NetworkSummaryData_IK, paired= FALSE)  
+wilcox.test(BetweennessCentrality ~ Soil.layer, data = NetworkSummaryData_IK, paired= FALSE) 
+wilcox.test(ClusteringCoefficient ~ Soil.layer, data = NetworkSummaryData_IK, paired= FALSE) 
+wilcox.test(NeighborhoodConnectivity ~ Soil.layer, data = NetworkSummaryData_IK, paired= FALSE) 
+```
+```{r}
+wilcox.test(Degree ~ Soil.layer, data = NetworkSummaryData_16S, paired= FALSE) 
+wilcox.test(AverageShortestPathLength ~ Soil.layer, data = NetworkSummaryData_16S, paired= FALSE)  
+wilcox.test(BetweennessCentrality ~ Soil.layer, data = NetworkSummaryData_16S, paired= FALSE) 
+wilcox.test(ClusteringCoefficient ~ Soil.layer, data = NetworkSummaryData_16S, paired= FALSE) 
+wilcox.test(NeighborhoodConnectivity ~ Soil.layer, data = NetworkSummaryData_16S, paired= FALSE) 
+```
+
+```{r}
+wilcox.test(Degree ~ Soil.layer, data = NetworkSummaryData_ITS, paired= FALSE) 
+wilcox.test(AverageShortestPathLength ~ Soil.layer, data = NetworkSummaryData_ITS, paired= FALSE)  
+wilcox.test(BetweennessCentrality ~ Soil.layer, data = NetworkSummaryData_ITS, paired= FALSE) 
+wilcox.test(ClusteringCoefficient ~ Soil.layer, data = NetworkSummaryData_ITS, paired= FALSE) 
+wilcox.test(NeighborhoodConnectivity ~ Soil.layer, data = NetworkSummaryData_ITS, paired= FALSE) 
+```
+##boxplots
+```{r}
+network_theme <- theme_bw()+
+  xlab("")+
+  labs(fill = "")+
+  theme(axis.text = element_text(size=14, colour = "black"),
+  axis.title=element_text(size=14, colour = "black"),
+  legend.position = "none")
+  
+Degree.plot <- ggplot(NetworkSummaryData, aes(x=Kingdom, y=Degree, fill=Soil.layer))+
+  geom_boxplot(stat = "boxplot", position = "dodge2", outlier.colour = "red")+
+  ylab("Node degree")+
+  scale_fill_manual(values = c("#f1a340", "#636363"))
+Degree.plot = Degree.plot +
+  annotate("text", x = 1, y= 9, label= "ns", size=7)+
+  annotate("text", x = 2, y= 9, label= "***", size=7)+
+  annotate("text", x = 3, y= 9, label= "***", size=7)
+Degree.plot
+
+APL.plot <- ggplot(NetworkSummaryData, aes(x=Kingdom, y=AverageShortestPathLength, fill=Soil.layer)) + 
+  geom_boxplot(stat = "boxplot", position = "dodge2", outlier.colour = "red")+
+  ylab("Average Path Length")+
+  network_theme +
+  scale_fill_manual(values = c("#f1a340", "#636363"))
+APL.plot = APL.plot +
+  annotate("text", x = 1, y= 9, label= "***", size=7)+
+  annotate("text", x = 2, y= 9, label= "***", size=7)+
+  annotate("text", x = 3, y= 9, label= "***", size=7)
+APL.plot
+
+ClusCo.plot <- ggplot(NetworkSummaryData, aes(x=Kingdom, y=ClusteringCoefficient, fill=Soil.layer)) + 
+  geom_boxplot(stat = "boxplot", position = "dodge2", outlier.colour = "red")+
+  ylab("Clustering Coefficient")+
+  network_theme +
+  scale_fill_manual(values = c("#f1a340", "#636363"))
+ClusCo.plot = ClusCo.plot +
+  annotate("text", x = 1, y= .8, label= "ns", size=7)+
+  annotate("text", x = 2, y= .8, label= "***", size=7)+
+  annotate("text", x = 3, y= .8, label= "***", size=7)
+ClusCo.plot
+
+NeighSize.plot <- ggplot(NetworkSummaryData, aes(x=Kingdom, y=NeighborhoodConnectivity, fill=Soil.layer)) + 
+  geom_boxplot(stat = "boxplot", position = "dodge2", outlier.colour = "red")+
+  ylab("Neighborhood Connectivity")+
+  network_theme +
+  scale_fill_manual(values = c("#f1a340", "#636363"))
+NeighSize.plot = NeighSize.plot +
+  annotate("text", x = 1, y= 9, label= "ns", size=7)+
+  annotate("text", x = 2, y= 9, label= "***", size=7)+
+  annotate("text", x = 3, y= 9, label= "***", size=7)
+NeighSize.plot
+
+Betweenness.plot <- ggplot(NetworkSummaryData, aes(x=Kingdom, y=BetweennessCentrality, fill=Soil.layer)) + 
+  geom_boxplot(stat = "boxplot", position = "dodge2", outlier.colour = "red")+
+  theme_bw()+
+  xlab("")+
+  ylab("Betweenness Centrality")+
+  labs(fill = "")+
+  theme(axis.text = element_text(size=14, colour = "black"),
+  axis.title=element_text(size=14, colour = "black"),
+  legend.text = element_text(size = 14, colour = "black"),
+  legend.title = element_text(size = 14, colour = "black"))+
+  scale_fill_manual(values = c("#f1a340", "#636363"))
+Betweenness.plot = Betweenness.plot +
+  annotate("text", x = 1, y= .8, label= "ns", size=7)+
+  annotate("text", x = 2, y= .8, label= "***", size=7)+
+  annotate("text", x = 3, y= .8, label= "ns", size=7)
+Betweenness.plot
+```
+```{r}
+network_stats_plot <- Degree.plot + APL.plot + ClusCo.plot + NeighSize.plot + Betweenness.plot
+#png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/network_stats_plot.png", width = 900, height = 500)
+plot(network_stats_plot)
+```
+
+
+
+
+
+
+
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
