@@ -33,9 +33,9 @@ library(RCy3)
 ##read in data. Sample X genus tables of topsoil and subsoil (16S and ITS genera are in same dataframe)
 ##ASVs with sum 0.5% in atleast 10% samples
 ```{r read in data}
-Topsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Topsoil_core_genera.csv") 
-Subsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Subsoil_core_genera.csv") 
-Allsoil_core <- read.csv("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Allsoil_core_genera.csv") 
+Topsoil_core <- read.csv("~/Topsoil_core_genera.csv") 
+Subsoil_core <- read.csv("~/Subsoil_core_genera.csv") 
+Allsoil_core <- read.csv("~/Allsoil_core_genera.csv") 
 
 rownames(Topsoil_core) = Topsoil_core$Row.names
 Topsoil_core = Topsoil_core[,-1:-2]
@@ -73,9 +73,6 @@ V(Topsoil.gl2)$colour[1:5] <- c("red")
 V(Topsoil.gl2)$colour[6:254] <- c("blue")
 V(Topsoil.gl2)$colour[255:399] <- c("yellow") #setting vertex attributes for plotting
 
-
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Topsoil_interkingdom.png", width = 900, height = 900)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_interkingdom.png", width = 600, height = 600)
 plot(Topsoil.gl2, layout=TS.coord, vertex.size=Topsoil.vsize, main="(A) Topsoil interkingdom", edge.width=E(Topsoil.gl2)$weight, vertex.color= V(Topsoil.gl2)$colour, vertex.label=NA, edge.color="black")
 ```
 # subsoil interkingdom
@@ -96,12 +93,9 @@ V(Subsoil.gl2)$name[179:209] <- c("Fungi") #setting vertex attributes for plotti
 V(Subsoil.gl2)$colour[1:6] <- c("red")
 V(Subsoil.gl2)$colour[7:178] <- c("blue")
 V(Subsoil.gl2)$colour[179:209] <- c("yellow") #setting vertex attributes for plotting
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Subsoil_interkingdom.png", width = 900, height = 900)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_interkingdom.png", width = 600, height = 600)
+
 plot(Subsoil.gl2, layout=SS.coord, vertex.size=Subsoil.vsize, main="(B) Subsoil interkingdom", edge.width=E(Subsoil.gl)$weight, vertex.color= V(Subsoil.gl2)$colour, vertex.label=NA, edge.color="black")
 ```
-
-
 ##running models on bacteria and fungi separately
 ```{r}
 Fungi_topsoil <- Topsoil_core[,255:399]
@@ -117,7 +111,6 @@ Bacteria_topsoil.SE <- spiec.easi(Bacteria_topsoil, method='mb', lambda.min.rati
 Fungi_subsoil.SE <- spiec.easi(Fungi_subsoil, method='mb', lambda.min.ratio=1e-1, nlambda=20, pulsar.params=list(rep.num=50), sel.criterion='bstars')
 Bacteria_subsoil.SE <- spiec.easi(Bacteria_subsoil, method='mb', lambda.min.ratio=1e-1, sel.criterion='bstars', nlambda=20, pulsar.params=list(rep.num=50))
 ```
-
 #create igraph objects
 #fungi
 ```{r}
@@ -130,8 +123,6 @@ Fungi_topsoil.vsize   <- rowMeans(clr(Fungi_topsoil, 1))+6
 F_TS.coord <- layout.fruchterman.reingold(Fungi_topsoil.gl)
 V(Fungi_topsoil.gl)$colour <- c("yellow") 
 
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Fungal_topsoil.png", width = 700, height = 700)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_fungi.png", width = 600, height = 600)
 plot(Fungi_topsoil.gl, layout=F_TS.coord, vertex.size=Fungi_topsoil.vsize, main="(E) Topsoil fungi", edge.width=E(Fungi_topsoil.gl)$weight, vertex.label = NA,  vertex.color="yellow", edge.color="black")
 
 Fungi_subsoil.cor  <- symBeta(getOptBeta(Fungi_subsoil.SE), mode='maxabs')
@@ -141,8 +132,7 @@ Fungi_subsoil.gl <- Fungi_subsoil.gl - E(Fungi_subsoil.gl)[E(Fungi_subsoil.gl)$w
 range(E(Fungi_subsoil.gl)$weight) #range of edge weights
 Fungi_subsoil.vsize   <- rowMeans(clr(Fungi_subsoil, 1))+6
 F_TS.coord <- layout.fruchterman.reingold(Fungi_subsoil.gl)
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Fungal_subsoil.png", width = 700, height = 700)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_fungi.png", width = 600, height = 600)
+
 plot(Fungi_subsoil.gl, layout=F_TS.coord, vertex.size=Fungi_subsoil.vsize, main="(F) Subsoil fungi", edge.width=E(Fungi_subsoil.gl)$weight, vertex.label = NA,  vertex.color="yellow", edge.color="black")
 ```
 #bacteria
@@ -162,8 +152,6 @@ V(Bacteria_topsoil.gl2)$name[6:254] <- c("Bacteria")
 V(Bacteria_topsoil.gl2)$colour[1:5] <- c("red")
 V(Bacteria_topsoil.gl2)$colour[6:254] <- c("blue")
 
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Bacteria_topsoil.png", width = 700, height = 700)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Topsoil_bacteria.png", width = 600, height = 600)
 plot(Bacteria_topsoil.gl2, layout=F_TS.coord, vertex.size=Bacteria_topsoil.vsize, main="(C) Bacteria topsoil", edge.width=E(Bacteria_topsoil.gl2)$weight, vertex.label= NA, vertex.color=V(Bacteria_topsoil.gl2)$colour, edge.color="black")
 
 Bacteria_subsoil.cor  <- symBeta(getOptBeta(Bacteria_subsoil.SE), mode='maxabs')
@@ -181,8 +169,6 @@ V(Bacteria_subsoil.gl2)$name[7:178] <- c("Bacteria")
 V(Bacteria_subsoil.gl2)$colour[1:6] <- c("red")
 V(Bacteria_subsoil.gl2)$colour[7:178] <- c("blue")
 
-#png("C:/Users/ByersA/OneDrive - Scion/Deep Carbon R/Network Analysis/Bacteria_subsoil.png", width = 700, height = 700)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Subsoil_bacteria.png", width = 600, height = 600)
 plot(Bacteria_subsoil.gl2, layout=F_TS.coord, vertex.size=Bacteria_subsoil.vsize, vertex.label = NA, main="(D) Bacteria subsoil", edge.width=E(Bacteria_subsoil.gl2)$weight, vertex.color=V(Bacteria_subsoil.gl2)$colour, edge.color="black")
 ```
 
@@ -302,12 +288,6 @@ Betweenness.plot = Betweenness.plot +
   annotate("text", x = 3, y= .8, label= "ns", size=7)
 Betweenness.plot
 ```
-```{r}
-network_stats_plot <- Degree.plot + APL.plot + ClusCo.plot + NeighSize.plot + Betweenness.plot
-#png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/network_stats_plot.png", width = 900, height = 500)
-plot(network_stats_plot)
-```
-
 
 
 
