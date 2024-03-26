@@ -8,11 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 ## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
@@ -26,12 +24,10 @@ library("dada2")
 library("ShortRead")
 library("Biostrings")
 ```
-
 ```{r}
-path <- "C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/AGRF_CAGRF21067226_JV8MM"
+path <- "~/AGRF_CAGRF21067226_JV8MM"
 list.files(path)
 ```
-
 #Forward and reverse fastq filenames have format: <samplenum>_JV8MM_<index>_L001_<readNum>.fastq.gz
 ```{r}
 fnFs <- sort(list.files(path, pattern="_L001_R1.fastq.gz", full.names = TRUE))
@@ -45,7 +41,6 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
 plotQualityProfile(fnFs[1:4])
 plotQualityProfile(fnRs[1:4])
 ```
-
 #primer checks
 ```{r}
 FWD <- "CTTGGTCATTTAGAGGAAGTAA"  
@@ -63,14 +58,12 @@ FWD.orients <- allOrients(FWD)
 REV.orients <- allOrients(REV)
 FWD.orients
 ```
-
 #pre-filter sequences to remove those with Ns but perform no other filtering
 ```{r}
 fnFs.filtN <- file.path(path, "filtN", basename(fnFs)) # Put N-filterd files in filtN/ subdirectory
 fnRs.filtN <- file.path(path, "filtN", basename(fnRs))
 filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN, maxN = 0, multithread = FALSE)
 ```
-
 #count number of times primer appears in forward and reverse reads
 ```{r}
 primerHits <- function(primer, fn) {
@@ -83,13 +76,11 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[1]]),
     REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[1]]), 
     REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[1]]))
 ```
-
 ##remove primers using cutadapt (cite: DOI:10.14806/ej.17.1.200)
 ```{r}
-cutadapt <- "C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS DADA2/cutadapt" # CHANGE ME to the cutadapt path on your machine
+cutadapt <- "~/cutadapt" # CHANGE ME to the cutadapt path on your machine
 system2(cutadapt, args = "--version") # Run shell commands from R
 ```
-
 ```{r}
 path.cut <- file.path(path, "cutadapt")
 if(!dir.exists(path.cut)) dir.create(path.cut)
@@ -109,7 +100,6 @@ for(i in seq_along(fnFs)) {
   system2(cutadapt, args = c(R1.flags, R2.flags, "-n", 2, "-o", fnFs.cut[i], "-p", fnRs.cut[i], fnFs.filtN[i], fnRs.filtN[i])) 
 }
 ```
-
 #count presence of primers in first cutadapt sample
 ```{r}
 rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[5]]), 
@@ -117,7 +107,6 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[5]]),
     REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.cut[[5]]), 
     REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.cut[[5]]))
 ```
-
 #primer free sequence files
 ```{r}
 # Forward and reverse fastq filenames have the format:
@@ -130,16 +119,14 @@ sample.names <- unname(sapply(cutFs, get.sample.name))
 head(sample.names)
 ```
 
-
 #----- check read quality-----
 ```{r}
 plotQualityProfile(cutFs[1:4])
 plotQualityProfile(cutFs[1:4])
 ```
-
 # ------filter and trim-----
 ```{r}
-newpath <-"/home/saddison/cutadapt"
+newpath <-"~/cutadapt"
 filtFs <- file.path(newpath, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(newpath, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
@@ -152,8 +139,6 @@ head(filtered_out)
 errF <- learnErrors(filtFs, multithread=FALSE)
 errR <- learnErrors(filtRs, multithread=FALSE)
 ```
-
-
 ```{r}
 # dereplicate reads
 derep_filtFs <- derepFastq(filtFs[exists], verbose=TRUE)
@@ -164,25 +149,16 @@ names(derep_filtRs) <- sample.names[exists]
 # inferring ASV
 dadaFs <- dada(derep_filtFs, err=errF, multithread=FALSE)
 dadaRs <- dada(derep_filtRs, err=errR, multithread=FALSE)
-
 ```
-
 ```{r}
 # merging ASV
 merged_amplicons <- mergePairs(dadaFs, derep_filtFs, dadaRs, derep_filtRs, verbose=TRUE)
 seqtab <- makeSequenceTable(merged_amplicons)
 reads.per.seqlen <- tapply(colSums(seqtab), factor(nchar(getSequences(seqtab))), sum)
-write.table(reads.per.seqlen, "ASV_length.txt")
-write.table(seqtab, "merged.txt")
 
 # remove chimeric ASV
 seqtab.nochim <- removeBimeraDenovo(seqtab, multithread=TRUE, verbose=TRUE)
-write.table(seqtab.nochim, "seqtab_nochim.txt")
 ```
-
-
-
-
 ```{r}
 # final summary table
 getN <- function(x) sum(getUniques(x))
@@ -191,12 +167,9 @@ summary_tab <- data.frame(row.names=sample.names[exists], dada2_input=filtered_o
                dada_r=sapply(dadaRs, getN), merged=sapply(merged_amplicons, getN),
                nonchim=rowSums(seqtab.nochim),
                final_perc_reads_retained=round(rowSums(seqtab.nochim)/filtered_out[exists,1]*100, 1))
-#head(summary_tab)
-write.table(summary_tab, "final_summary.txt")
 
 # assign taxonomy
-taxa <- assignTaxonomy(seqtab.nochim, "/home/saddison/sh_general_release_dynamic_s_04.02.2020.fasta", multithread = TRUE, tryRC = TRUE)
-
+taxa <- assignTaxonomy(seqtab.nochim, "~/sh_general_release_dynamic_s_04.02.2020.fasta", multithread = TRUE, tryRC = TRUE)
 # giving our seq headers more manageable names (ASV_1, ASV_2...)
 asv_seqs <- colnames(seqtab.nochim)
 asv_headers <- vector(dim(seqtab.nochim)[2], mode="character")
@@ -226,7 +199,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 #filter and trim
 #assign new file names for filtered files and place in new directory
 ```{r}
-newpath <- "C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS DADA2"
+newpath <- "~/ITS DADA2"
 filtFs <- file.path(newpath, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(newpath, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
@@ -236,18 +209,15 @@ filtered_out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, maxN = 0, maxEE = c(2,
     truncQ = 2, minLen = 50, rm.phix = TRUE, compress = TRUE, multithread = FALSE)
 head(filtered_out)
 ```
-
 ```{r}
 errF <- learnErrors(filtFs, multithread=FALSE)
 errR <- learnErrors(filtRs, multithread=FALSE)
 ```
-
 #learn the error rates of thea DADA2 algorithm
 ```{r}
 errF <- learnErrors(filtFs, multithread = FALSE)
 errR <- learnErrors(filtRs, multithread = FALSE) #windows does not support multithread so set to FALSE
 ```
-
 # dereplicate identical reads
 ```{r}
 derep_filtFs <- derepFastq(filtFs[exists], verbose=TRUE)
@@ -255,13 +225,11 @@ names(derep_filtFs) <- sample.names[exists] # the sample names in these objects 
 derep_filtRs <- derepFastq(filtRs[exists], verbose=TRUE)
 names(derep_filtRs) <- sample.names[exists]
 ```
-
 # inferring ASV
 ```{r}
 dadaFs <- dada(derep_filtFs, err=errF, multithread=FALSE)
 dadaRs <- dada(derep_filtRs, err=errR, multithread=FALSE)
 ```
-
 # merging ASV
 ```{r}
 merged_amplicons <- mergePairs(dadaFs, derep_filtFs, dadaRs, derep_filtRs, verbose=TRUE)
@@ -270,13 +238,11 @@ reads.per.seqlen <- tapply(colSums(seqtab), factor(nchar(getSequences(seqtab))),
 write.table(reads.per.seqlen, "ASV_length.txt")
 write.table(seqtab, "merged.txt")
 ```
-
 # remove chimeric ASV
 ```{r}
 seqtab.nochim <- removeBimeraDenovo(seqtab, multithread=FALSE, verbose=TRUE)
 write.table(seqtab.nochim, "seqtab_nochim.txt")
 ```
-
 # final summary table
 ```{r}
 getN <- function(x) sum(getUniques(x))
@@ -285,16 +251,11 @@ summary_tab <- data.frame(row.names=sample.names[exists], dada2_input=filtered_o
                dada_r=sapply(dadaRs, getN), merged=sapply(merged_amplicons, getN),
                nonchim=rowSums(seqtab.nochim),
                final_perc_reads_retained=round(rowSums(seqtab.nochim)/filtered_out[exists,1]*100, 1))
-
-head(summary_tab)
-write.table(summary_tab, "final_summary.txt")
 ```
-
 # assign taxonomy
 ```{r}
-taxa <- assignTaxonomy(seqtab.nochim, "C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS DADA2/sh_general_release_dynamic_10.05.2021.fasta", multithread = FALSE, tryRC = TRUE)
+taxa <- assignTaxonomy(seqtab.nochim, "~/sh_general_release_dynamic_10.05.2021.fasta", multithread = FALSE, tryRC = TRUE)
 ```
-
 # giving our seq headers more manageable names (ASV_1, ASV_2...)
 ```{r}
 asv_seqs <- colnames(seqtab.nochim)
@@ -304,7 +265,6 @@ for (i in 1:dim(seqtab.nochim)[2]) {
   asv_headers[i] <- paste(">ASV", i, sep="_")
 }
 ```
-
 ```{r}
 # writing out a fasta of our final ASV seqs:
 asv_fasta <- c(rbind(asv_headers, asv_seqs))
