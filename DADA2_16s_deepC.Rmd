@@ -25,18 +25,15 @@ BiocManager::install("dada2", version = "3.13n")
 library(dada2)
 library(ShortRead)
 ```
-
 ```{r}
-path <- "C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s sequencing data/16S_AGRF_CAGRF21035708_JK2V2"
+path <- "~ta/16S_AGRF_CAGRF21035708_JK2V2"
 list.files(path)
 ```
-
 ```{r}
 #forward and reverse fastq filenames have format : <samplenum>_JK2V2_<index>_L001_<readNum>.fastq.gz
 fnFs <- sort(list.files(path, pattern = "_L001_R1.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern = "_L001_R2.fastq.gz", full.names = TRUE))
 ```
-
 ```{r}
 #checking for primers
 FWD <- "GTGYCAGCMGCCGCGGTAA" 
@@ -65,17 +62,15 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs[[103]]),
       REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs[[103]]), 
       REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs[[103]]))
 ```
-
 ```{r}
 #check read quality
 plotQualityProfile(fnFs[1:4])
 plotQualityProfile(fnRs[1:4])
 ```
-
 ```{r}
 #filter and trim
 #assign new file names for filtered files and place in new directory
-newpath<- "C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s_tax4fun2"
+newpath<- "~/16s_seqdata"
 filtFs <- file.path(newpath, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(newpath, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 #filtFs
@@ -87,7 +82,6 @@ print(filtered_out)
 errF <- learnErrors(filtFs, multithread = FALSE)
 errR <- learnErrors(filtRs, multithread = FALSE) #windows does not support multithread so set to FALSE
 ```
-
 ```{r}
 #dereplicate reads
 derep_filtFs <- derepFastq(filtFs, verbose=TRUE)
@@ -95,19 +89,16 @@ names(derep_filtFs) <- sample.names #the sample names in these objects are initi
 derep_filtRs <- derepFastq(filtRs, verbose=TRUE)
 names(derep_filtRs) <- sample.names
 ```
-
 ```{r}
 #inferring ASV
 dadaFs <- dada(derep_filtFs, err=errF, multithread=FALSE)
 dadaRs <- dada(derep_filtRs, err=errR, multithread=FALSE)
 ```
-
 ```{r}
 #merging ASV
 merged_amplicons <- mergePairs(dadaFs, derep_filtFs, dadaRs, derep_filtRs, trimOverhang=TRUE, verbose=TRUE)
 seqtab <- makeSequenceTable(merged_amplicons)
 ```
-
 ```{r}
 #remove chimeric ASV
 seqtab.nochim <- removeBimeraDenovo(seqtab, multithread=FALSE, verbose=TRUE)
@@ -115,7 +106,6 @@ write.table(seqtab.nochim, "seqtab_nochim.txt")
 #check what proportion of chimeras make up the dataset 
 sum(seqtab.nochim)/sum(seqtab)
 ```
-
 ```{r}
 #final summary table
 getN <- function(x) sum(getUniques(x))
@@ -124,15 +114,12 @@ summary_tab <- data.frame(row.names=sample.names, dada2_input=filtered_out[,1],
                           dada_r=sapply(dadaRs, getN), merged=sapply(merged_amplicons, getN),
                           nonchim=rowSums(seqtab.nochim),
                           final_perc_reads_retained=round(rowSums(seqtab.nochim)/filtered_out[,1]*100, 1))
-head(summary_tab)
-write.table(summary_tab, "final_summary.txt")
 ```
 
 ```{r}
 # assign taxonomy
 #for assign taxonomy, 16s dataset was downloaded from https://benjjneb.github.io/dada2/training.html
-taxa <- assignTaxonomy(seqtab.nochim, "C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s sequencing data/16s_dada2/rdp_train_set_16.fa.gz", multithread=FALSE)
-
+taxa <- assignTaxonomy(seqtab.nochim, "~/rdp_train_set_16.fa.gz", multithread=FALSE)
 
 # giving our seq headers more manageable names (ASV_1, ASV_2...)
 asv_seqs <- colnames(seqtab.nochim)
