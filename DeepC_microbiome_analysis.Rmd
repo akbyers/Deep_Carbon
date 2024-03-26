@@ -52,11 +52,11 @@ library(gdata)
 ##this data needs to be included in the supplementary materials of report, but can also be found in the Post DADA2 16S analysis.Rmd file
 
 ```{r read in files}
-ASV.16S <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s sequencing data/16S analysis- required files/ASVs_counts_16S.csv")
+ASV.16S <- read.csv("ASVs_counts_16S.csv")
 colnames(ASV.16S)[1] <- "ASVs"
 rownames(ASV.16S) <- ASV.16S[,1]
 
-taxa.16S <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s sequencing data/16S analysis- required files/ASVs_taxonomy_16S.csv", header = TRUE)
+taxa.16S <- read.csv("ASVs_taxonomy_16S.csv", header = TRUE)
 colnames(taxa.16S)[1] <- "ASVs"
 rownames(taxa.16S) <- taxa.16S[,1]
 ```
@@ -99,15 +99,9 @@ Chloroplast_removed2 <- subset(Chloroplast_removed2[-nrow(Chloroplast_removed2),
 ```{r}
 Chloroplast_removed2[Chloroplast_removed2 == 1] <- 0
 ```
-#save files
-```{r}
-write.csv(Chloroplast_removed2, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/16S_ASV_counts_cleaned.csv")
-write.csv(Taxa_remaining.df, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/16S_Taxonomy_cleaned.csv")
-```
-
 ##removing NTC contaminants
 ```{r removing NTC contaminants}
-samples.dat <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/16s sequencing data/16S analysis- required files/16s_samplefile.csv")
+samples.dat <- read.csv("16s_samplefile.csv")
 rownames(samples.dat) <- samples.dat$ï..SampleID
 row.names(Chloroplast_removed2) = Chloroplast_removed2$ASVs
 ASV_16S = Chloroplast_removed2[,-1]
@@ -144,14 +138,12 @@ phyloseq.16S
 NTC.cleaned.asvs = as(otu_table(phyloseq.16S), "matrix")
 if(taxa_are_rows(phyloseq.16S)){NTC.cleaned.asvs <- t(NTC.cleaned.asvs)}
 ASVdf.NTC.cleaned = as.data.frame(NTC.cleaned.asvs)
-write.csv(ASVdf.NTC.cleaned, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/16S-asvs-NTCcleaned.csv")
 
 NTCcleaned.sample.dat <- sample_data(phyloseq.16S)
 
 NTC.cleaned.taxa = as(tax_table(phyloseq.16S), "matrix")
 if(taxa_are_rows(phyloseq.16S)){NTC.cleaned.taxa  <- (NTC.cleaned.taxa)}
 TAXAdf.NTC.cleaned = as.data.frame(NTC.cleaned.taxa)
-write.csv(TAXAdf.NTC.cleaned, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs//16S-taxa-NTCcleaned.csv")
 ```
 # create rarefaction curves
 ```{r}
@@ -252,12 +244,10 @@ all_depths <- all_depths[,-1]
 ```
 ## Create rarefaction curve by pcr
 ```{r}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/16S_rarecurve_PCR.png", width = 600, height = 400)
 rarecurve(all_pcr, step = 20, xlab = "Number of Sequences", ylab = "ASVs", label = TRUE)
 ```
 ## Create rarefaction curve by depth
 ```{r}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/16S_rarecurve_Depth.png", width = 600, height = 400)
 rarecurve(all_depths, step = 20, xlab = "Number of Sequences", ylab = "ASVs", label = TRUE)
 ```
 ## calculate 16S sample sums
@@ -268,7 +258,6 @@ phyloseq.16S.no.singletons <- filter_taxa(phyloseq.16S, function (x) {sum(x > 0)
 sample_sums_16S_NS <- as.data.frame(sample_sums(phyloseq.16S.no.singletons))
 sampleSums_16S <- cbind(sample_sums_16S, sample_sums_16S_NS) #combine dataframes
 colnames(sampleSums_16S) <- c("SampleSums", "SampleSums_NoSingletons")
-write.csv(sampleSums_16S, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/sample_sums_16s.csv")
 ```
 ##rarefy 16S phyloseq object to minimum sampling depth. First removing sample 89 as this had a low read count
 ```{r rarefy phyloseq object}
@@ -290,7 +279,6 @@ alpha_16S.sample.dat <- sample_data(rarefied.16S)
 alpha.dat_16S <- merge(alphaD_16S, alpha_16S.sample.dat, by=0, all = TRUE)
 row.names(alpha.dat_16S) = alpha.dat_16S$Row.names
 levels(alpha.dat_16S$Depth) <- c("0 to 10"," 10 to 20","20 to 30","30 to 40","40 to 50","50 to 60","60 to 70","70 to 80","80 to 90", "90 to 100")
-write.csv(alpha.dat_16S, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/alpha_diversity_16S.csv")
 ```
 
 # alpha diversity kruskal wallis tests
@@ -316,7 +304,6 @@ KW_16S_evenness.Results <- KW_16S_evenness.Results[4:6,]
 KW_16S_evenness.Results["Metric"] <- "Evenness" 
 
 KW_16S_results <- rbind(KW_16S_chao1.Results, KW_16S_shannon.Results, KW_16S_evenness.Results)
-write.csv(KW_16S_results, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/KW_16S_results.csv")
 ```
 #performing and plotting Dunn's post hoc tests to identify depth increments with sig dif alpha diversity
 ```{r, fig.height=10, fig.width=7}
@@ -340,9 +327,6 @@ sample_data(rarefied.16S)$Depth <- factor(sample_data(rarefied.16S)$Depth, level
 rarefied.16S <- subset_samples(rarefied.16S, sample_names(rarefied.16S) !="X78")
 bray.distance.16S = phyloseq::distance(rarefied.16S, method = "bray") #calculating bray curtis
 nmds.16S = ordinate(rarefied.16S, method = "NMDS", distance= bray.distance.16S) #nmds 
-
-#exporting bray distance
-#write.csv(as.matrix(bray.distance.16S), "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/BrayCurtis-16S.csv")
 ```
 #16S NMDS plot
 ```{r}
@@ -368,19 +352,14 @@ bray_nmds_16S
 bray.sample.dat = data.frame(sample_data(rarefied.16S))
 x16S_community <- t(as.data.frame(otu_table(rarefied.16S)))
 adonis_16S <- adonis(x16S_community ~ PCR + Depth + Transect, data= bray.sample.dat, method = "bray")
-write.csv(adonis_16S$aov.tab, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Permanova_16S.csv")
 pair.adonis_16S <- pairwiseAdonis::pairwise.adonis(x16S_community, bray.sample.dat$Depth, p.adjust.m = "bonferroni", perm=999, sim.function = "vegdist", sim.method = "bray")
-write.csv(pair.adonis_16S, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Depth_pairAdonis_16S.csv")
 pair.adonis_16S.2 <- pairwiseAdonis::pairwise.adonis(x16S_community, bray.sample.dat$Transect, p.adjust.m = "bonferroni", perm=999, sim.function = "vegdist", sim.method = "bray")
-write.csv(pair.adonis_16S.2, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Transect_pairAdonis_16S.csv")
 ```
 #dotchart of pairwise adonis results
 ```{r, fig.height=9, fig.width=6}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/16S_PA_dotchartDepth.png", width = 500, height = 700)
 dotchart(pair.adonis_16S$p.adjusted, labels = pair.adonis_16S$pairs, main = "16S pairwise Adonis", ylab= "Depth pairs", xlab = "2-sided p-value with bonferroni correction (red reference line set at 0.05)", color= "black", xlim = c(0.0,1.0), pch = 19)
 par(abline(v=0.05, col="red"))
 
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/16S_PA_dotchartTransect.png", width = 500, height = 700)
 dotchart(pair.adonis_16S.2$p.adjusted, labels = pair.adonis_16S.2$pairs, main = "16S pairwise Adonis", xlab = "2-sided p-value with bonferroni correction (red reference line set at 0.05)", ylab= "Transect pairs",color= "black", xlim = c(0.0,1.0), pch = 19)
 par(abline(v=0.05, col="red"))
 ```
@@ -389,14 +368,10 @@ par(abline(v=0.05, col="red"))
 betadisp_16s <- betadisper(bray.distance.16S, bray.sample.dat$Depth)
 betadisp_16s_AOV <- anova(betadisp_16s) #anova on betadispersions
 betadisp_16s_Tukey <- TukeyHSD(betadisp_16s) #tukey hsd posthoc test
-
-write.csv(betadisp_16s_AOV, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Betadisp_16S.csv")
-write.csv(betadisp_16s_Tukey$group, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Betadisp_16S_Tukey.csv") #exporting test results
 ```
 ```{r venn diagrams}
 venn.16s <- ps_venn(rarefied.16S, "Depth2", fraction = 0, weight =FALSE, type = "percent", relative = TRUE, plot = TRUE)
 venn.list.16s <- ps_venn(rarefied.16S, "Depth2", fraction = 0, weight =FALSE, type = "percent", relative = TRUE, plot = FALSE) ##return list with shared vs unique taxa
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/16svenn.png", width = 500, height = 500)
 plot(venn.16s)
 ```
 
@@ -418,7 +393,6 @@ Community.mat.16S <- as.matrix(vegdist(Community.dat.16S2)) #calculate bray curt
 Mantel.16S <- lapply(x16s.env.EU, function(x) vegan::mantel(x, Community.mat.16S, method="spearman", permutations = 999)) #perform mantel tests
 Mantel.16S.Results <- data.frame(Mantel.16S = sapply(Mantel.16S, function(x) x$statistic),
            p.value = sapply(Mantel.16S, function(x) x$signif))
-write.csv(Mantel.16S.Results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Mantel.16S.Results.csv")
 ```
 ##nmds plots with envfit
 ```{r 16S crt envfit analysis}
@@ -459,8 +433,6 @@ gg_16s.envfit
 ```
 ## looking at taxonomic differences. Chosen to use ANCOM with bias correction. Two important papers https://doi.org/10.1038/s41522-020-00160-w, https://doi.org/10.1038/s41467-020-17041-7
 #see GITHUB page for info https://github.com/FrederickHuangLin/ANCOM-BC-Code-Archive
-
-
 #16S ANCOM: phyla level
 ```{r phylum level ANCOM}
 phylum_16S = microbiome::aggregate_taxa(phyloseq.16S, level = "Phylum") 
@@ -476,7 +448,6 @@ phylum_16S_results['SE'] <- res$se
 phylum_16S_results['p.adj'] <- res$q_val #putting p adj into dataframe
 phylum_16S_results['diff.abund'] <- res$diff_abn
 colnames(phylum_16S_results)[1] <- "Beta_value"
-write.csv(phylum_16S_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/phylum_16S_results.csv")
 ```
 ##16S ANCOM genus level
 ```{r genus level ANCOM}
@@ -492,7 +463,6 @@ genus_16S_results['SE'] <- res_genus_16S$se
 genus_16S_results['p.adj'] <- res_genus_16S$q_val #putting p adj into dataframe
 genus_16S_results['diff.abund'] <- res_genus_16S$diff_abn
 colnames(genus_16S_results)[1] <- "Beta_value"
-write.csv(genus_16S_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/genus_16S_results.csv")
 ```
 ##16S class, order and genus level ANCOM for correlation plots
 ```{r}
@@ -508,7 +478,6 @@ class_16S_results['SE'] <- res_class_16S$se
 class_16S_results['p.adj'] <- res_class_16S$q_val #putting p adj into dataframe
 class_16S_results['diff.abund'] <- res_class_16S$diff_abn
 colnames(class_16S_results)[1] <- "Beta_value"
-write.csv(class_16S_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/class_16S_results.csv")
 
 order_data_16S = microbiome::aggregate_taxa(phyloseq.16S, level = "Order") 
 sample_data(order_data_16S)$Depth <- soil.layer.16S
@@ -522,8 +491,6 @@ order_16S_results['SE'] <- res_order_16S$se
 order_16S_results['p.adj'] <- res_order_16S$q_val #putting p adj into dataframe
 order_16S_results['diff.abund'] <- res_order_16S$diff_abn
 colnames(order_16S_results)[1] <- "Beta_value"
-write.csv(order_16S_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/order_16S_results.csv")
-
 family_data_16S = microbiome::aggregate_taxa(phyloseq.16S, level = "Family") 
 sample_data(family_data_16S)$Depth <- soil.layer.16S
 sample_data(family_data_16S)$Depth <- factor(sample_data(family_data_16S)$Depth, levels = c("Topsoil", "Subsoil"))
@@ -536,7 +503,6 @@ family_16S_results['SE'] <- res_family_16S$se
 family_16S_results['p.adj'] <- res_family_16S$q_val #putting p adj into dataframe
 family_16S_results['diff.abund'] <- res_family_16S$diff_abn
 colnames(family_16S_results)[1] <- "Beta_value"
-write.csv(family_16S_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/family_16S_results.csv")
 ```
 
 ##ANCOM waterfall plots
@@ -596,16 +562,14 @@ order_16S_plot <- ggplot(data=order_16S_results2, aes(x=Beta_value, y=reorder(or
 order_16S_plot <- order_16S_plot + text_theme
 order_16S_plot
 ```
-
-
 ##ITS analysis
 ## read in ITS data
 ```{r}
-ASV.ITS <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS analysis- required files/ASVs_counts_ITS.csv")
+ASV.ITS <- read.csv("ASVs_counts_ITS.csv")
 colnames(ASV.ITS)[1] <- "ASVs"
 rownames(ASV.ITS) <- ASV.ITS$ASVs
 
-taxa.ITS <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS analysis- required files/ASVs_taxonomy_ITS.csv")
+taxa.ITS <- read.csv("ASVs_taxonomy_ITS.csv")
 colnames(taxa.ITS)[1] <- "ASVs"
 rownames(taxa.ITS) <- taxa.ITS$ASVs
 ```
@@ -635,14 +599,9 @@ NA_removed <- subset(NA_removed[-nrow(NA_removed),])
 ```{r}
 NA_removed[NA_removed ==1] <- 0
 ```
-#save files
-```{r}
-write.csv(NA_removed, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/DADA2_outputs/ITS_ASV_counts_cleaned.csv")
-write.csv(Taxa_remaining.df, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/DADA2_outputs/ITS_Taxonomy_cleaned.csv")
-```
 ##set up phyloseq object
 ```{r}
-samples.ITS <- read.csv("C:/Users/ByersA/OneDrive - scion/Soil deep C data/ITS sequencing data/ITS analysis- required files/ITS_sample_dat.csv")
+samples.ITS <- read.csv("ITS_sample_dat.csv")
 rownames(samples.ITS) <- samples.ITS$SampleID
 NA_removed = NA_removed[,-1]
 Taxa_remaining.df = Taxa_remaining.df[,-1]
@@ -758,12 +717,10 @@ all_depths.ITS <- all_depths.ITS[,-1]
 ```
 # Create rarefaction curve by pcr
 ```{r}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/ITS_rarecurve_PCR.png", width = 600, height = 400)
 rarecurve(all_pcr.ITS, step = 20, xlab = "Number of Sequences", ylab = "ASVs", label = TRUE)
 ```
 # Create rarefaction curve by depth
 ```{r}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/ITS_rarecurve_Depth.png", width = 600, height = 400)
 rarecurve(all_depths.ITS, step = 20, xlab = "Number of Sequences", ylab = "ASVs", label = TRUE)
 ```
 #calculating sample sums and removing singletons
@@ -773,7 +730,6 @@ phyloseq.ITS_no_singletons <- filter_taxa(phyloseq.ITS, function (x) {sum(x > 0)
 sumITS_no_singletons <- as.data.frame(sample_sums(phyloseq.ITS_no_singletons))
 ITS_SampleSums <- cbind(sums_ITS, sumITS_no_singletons)
 colnames(ITS_SampleSums) <- c("SampleSums_ITS", "SampleSums_ITS.NS")
-write.csv(ITS_SampleSums, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/ITS_SampleSums.csv")
 ```
 # removing samples less than 10000 prior to rarefaction
 ```{r}
@@ -789,11 +745,8 @@ if(taxa_are_rows(rarefied.ITS)){rarefied.ITS.df <- t(rarefied.ITS.df)}
 rarefied.ITS.taxa = as(tax_table(rarefied.ITS), "matrix")
 if(taxa_are_rows(rarefied.ITS)){rarefied.ITS.taxa <- (rarefied.ITS.taxa)}
 ASVdf.rarefied.ITS = as.data.frame(rarefied.ITS.df)
-write.csv(ASVdf.rarefied.ITS, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/ITS_ASVs_rarefied.csv")
 TAXAdf.rarefied = as.data.frame(rarefied.ITS.taxa)
-write.csv(TAXAdf.rarefied, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/ITS_taxa_rarefied.csv")
 samples.rarefied.ITS <- as.data.frame(sample_data(rarefied.ITS))
-write.csv(samples.rarefied.ITS, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/ITS_samples_rarefied.csv")
 ```
 
 #ITS alpha diversity
@@ -808,7 +761,6 @@ alpha.ITS$Evenness = evenness #calculating evenness
 #export alpha diversity data
 alpha.ITS.dat <- merge(alpha.ITS, samples.rarefied.ITS, by=0, all = TRUE)
 row.names(alpha.ITS.dat) = alpha.ITS.dat$Row.names
-write.csv(alpha.ITS.dat, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/alpha_diversity_ITS.csv")
 ```
 #kruskal wallis tests to identify sig dif with soil depth
 ```{r }
@@ -833,7 +785,6 @@ KW_ITS_evenness.Results <- KW_ITS_evenness.Results[4:6,]
 KW_ITS_evenness.Results["Metric"] <- "Evenness" 
 
 KW_ITS_results <- rbind(KW_ITS_chao1.Results, KW_ITS_shannon.Results, KW_ITS_evenness.Results)
-write.csv(KW_ITS_results, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/KW_ITS_results.csv")
 ```
 #performing and plotting Dunn's post hoc tests to identify depth increments with sig dif alpha diversity
 ```{r, fig.height=10, fig.width=7}
@@ -863,8 +814,6 @@ sample_data(rarefied.ITS2)$Depth <- factor(sample_data(rarefied.ITS2)$Depth, lev
 levels(sample_data(rarefied.ITS2)$Depth)[levels(sample_data(rarefied.ITS2)$Depth)==" 10-20"] <- "10-20"
 bray.distance.ITS = distance(rarefied.ITS2, method = "bray") 
 nmds.ITS= ordinate(rarefied.ITS2, method = "NMDS", distance= bray.distance.ITS)#exporting bray distance
-
-write.csv(as.matrix(bray.distance.ITS), "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/BrayCurtis-ITS.csv")
 ```
 #ITS NMDS plot
 ```{r}
@@ -887,26 +836,20 @@ bray_nmds_ITS
 #merge and export 16S and ITS nmds plots
 bray_nmds_16S2 <- bray_nmds_16S + theme(legend.position = "none")
 nmds_plots <- bray_nmds_16S2 + bray_nmds_ITS
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/ITs_16S_nmds.png", width = 900, height = 450)
 plot(nmds_plots)
 ```
 ##ITS permanova 
 ```{r}
 bray.sample.dat = data.frame(sample_data(rarefied.ITS2)) 
 adonis_ITS <- adonis(bray.distance.ITS ~ PCR + Depth + Transect, data= bray.sample.dat)
-write.csv(adonis_ITS$aov.tab, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Permanova_ITS.csv")
 pair.adonis_ITS <- pairwise.adonis(bray.distance.ITS, bray.sample.dat$Depth, p.adjust.m = "bonferroni", perm=999)
-write.csv(pair.adonis_ITS, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Depth_pairAdonis_ITS.csv")
 pair.adonis_ITS.2 <- pairwise.adonis(bray.distance.ITS, bray.sample.dat$Transect, p.adjust.m = "bonferroni", perm=999)
-write.csv(pair.adonis_ITS.2, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Transect_pairAdonis_ITS.csv")
 ```
 #dotchart of pairwise adonis results
 ```{r, fig.height=9, fig.width=6}
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/ITS_PA_dotchartDepth.png", width = 500, height = 700)
 dotchart(pair.adonis_ITS$p.adjusted, labels = pair.adonis_ITS$pairs, main = "ITS pairwise Adonis", ylab= "Depth pairs", xlab = "2-sided p-value with bonferroni correction (red reference line set at 0.05)", color= "black", xlim = c(0.0,1.0), pch = 19)
 par(abline(v=0.05, col="red"))
 
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/ITS_PA_dotchartTransect.png", width = 500, height = 700)
 dotchart(pair.adonis_ITS.2$p.adjusted, labels = pair.adonis_ITS.2$pairs, main = "ITS pairwise Adonis", xlab = "2-sided p-value with bonferroni correction (red reference line set at 0.05)", ylab= "Transect pairs",color= "black", xlim = c(0.0,1.0), pch = 19)
 par(abline(v=0.05, col="red"))
 ```
@@ -916,14 +859,10 @@ par(abline(v=0.05, col="red"))
 betadisp_ITS <- betadisper(bray.distance.ITS, bray.sample.dat$Depth)
 betadisp_ITS_AOV <- anova(betadisp_ITS) #anova on betadispersions
 betadisp_ITS_Tukey <- TukeyHSD(betadisp_ITS) #tukey hsd posthoc test
-
-write.csv(betadisp_ITS_AOV, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Betadisp_ITS.csv")
-write.csv(betadisp_ITS_Tukey$group, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Betadisp_ITS_Tukey.csv") #exporting test results
 ```
 #ITS venn diagrams
 ```{r}
 venn.ITS <- ps_venn(rarefied.ITS, "Depth2", fraction = 0, weight =FALSE, type = "percent", relative = TRUE, plot = TRUE)
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/ITSvenn.png", width = 500, height = 500)
 plot(venn.ITS)
 ```
 ##------------------correlating ITS data with environmental variables-------------
@@ -944,7 +883,6 @@ Community.mat.ITS <- as.matrix(vegdist(Community.dat.ITS)) #calculate bray curti
 Mantel.ITS <- lapply(xITS.env.EU, function(x) vegan::mantel(x, Community.mat.ITS, method="spearman", permutations = 999)) #perform mantel tests
 Mantel.ITS.Results <- data.frame(Mantel.ITS = sapply(Mantel.ITS, function(x) x$statistic),
            p.value = sapply(Mantel.ITS, function(x) x$signif))
-write.csv(Mantel.ITS.Results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/Mantel.ITS.Results.csv")
 ```
 ##nmds plots with envfit
 ```{r}
@@ -1006,7 +944,6 @@ gg_ITS.envfit
 ```{r}
 gg_16s.envfit2 <- gg_16s.envfit + theme(legend.position = "none")
 gg_envfit <- gg_16s.envfit2 + gg_ITS.envfit
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/ITs_16S_envfit.png", width = 900, height = 450)
 plot(gg_envfit)
 ```
 
@@ -1023,7 +960,6 @@ phylum_ITS_results['SE'] <- res$se
 phylum_ITS_results['p.adj'] <- res$q_val #putting p adj into dataframe
 phylum_ITS_results['diff.abund'] <- res$diff_abn
 colnames(phylum_ITS_results)[1] <- "Beta_value"
-write.csv(phylum_ITS_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/phylum_ITS_results.csv")
 ```
 ##ITS ANCOM genus level
 ```{r genus level ANCOM}
@@ -1038,7 +974,6 @@ genus_ITS_results['SE'] <- res_genus_ITS$se
 genus_ITS_results['p.adj'] <- res_genus_ITS$q_val #putting p adj into dataframe
 genus_ITS_results['diff.abund'] <- res_genus_ITS$diff_abn
 colnames(genus_ITS_results)[1] <- "Beta_value"
-write.csv(genus_ITS_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/genus_ITS_results.csv")
 ```
 ##ITS class, order and genus level ANCOM for correlation plots
 ```{r}
@@ -1053,7 +988,6 @@ class_ITS_results['SE'] <- res_class_ITS$se
 class_ITS_results['p.adj'] <- res_class_ITS$q_val #putting p adj into dataframe
 class_ITS_results['diff.abund'] <- res_class_ITS$diff_abn
 colnames(class_ITS_results)[1] <- "Beta_value"
-write.csv(class_ITS_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/class_ITS_results.csv")
 
 order_data_ITS = microbiome::aggregate_taxa(phyloseq.ITS, level = "Order") 
 sample_data(order_data_ITS)$Soil_layer <- factor(sample_data(order_data_ITS)$Soil_layer, levels = c("Topsoil", "Subsoil"))
@@ -1066,7 +1000,6 @@ order_ITS_results['SE'] <- res_order_ITS$se
 order_ITS_results['p.adj'] <- res_order_ITS$q_val #putting p adj into dataframe
 order_ITS_results['diff.abund'] <- res_order_ITS$diff_abn
 colnames(order_ITS_results)[1] <- "Beta_value"
-write.csv(order_ITS_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/order_ITS_results.csv")
 
 family_data_ITS = microbiome::aggregate_taxa(phyloseq.ITS, level = "Family") 
 sample_data(family_data_ITS)$Soil_layer <- factor(sample_data(family_data_ITS)$Soil_layer, levels = c("Topsoil", "Subsoil"))
@@ -1079,7 +1012,6 @@ family_ITS_results['SE'] <- res_family_ITS$se
 family_ITS_results['p.adj'] <- res_family_ITS$q_val #putting p adj into dataframe
 family_ITS_results['diff.abund'] <- res_family_ITS$diff_abn
 colnames(family_ITS_results)[1] <- "Beta_value"
-write.csv(family_ITS_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/ITS/ITS_analysis_outputs/family_ITS_results.csv")
 ```
 ##ANCOM waterfall plots
 ##start at phyla level then repeat
@@ -1131,21 +1063,19 @@ order_ITS_plot <- order_ITS_plot + text_theme
 order_ITS_plot
 ```
 
-
 ###exporting ANCOM plots
 ```{r}
 order_16S_plot2 <- order_16S_plot + theme(axis.text.y = element_text(colour = "black", size = 14, face = "bold"), axis.text.x = element_text(colour = "black", face = "bold", size = 14), legend.text = element_text(size = 14, face ="bold", colour ="black"), axis.title.y = element_text(face = "bold", size = 14), axis.title.x = element_text(face = "bold", size = 14, colour = "black"))
 order_ITS_plot2 <- order_ITS_plot + theme(axis.text.y = element_text(colour = "black", size = 14, face = "bold"), axis.text.x = element_text(colour = "black", face = "bold", size = 14), legend.text = element_text(size = 14, face ="bold", colour ="black"), axis.title.y = element_text(face = "bold", size = 14), axis.title.x = element_text(face = "bold", size = 14, colour = "black"))
 
 ANCOM_order <- order_16S_plot2 + order_ITS_plot2 
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Ancom_order.png", width = 1200, height = 900)
 plot(ANCOM_order)
 ```
 
 ##microbial abundance data
 ```{r load microbial abundance data}
-qPCR.dat <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/qPCR_dat.csv") #long format for plots
-FB.ratio <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/FB_ratio.csv")
+qPCR.dat <- read.csv("qPCR_dat.csv") #long format for plots
+FB.ratio <- read.csv("FB_ratio.csv")
 view(qPCR.dat)
 View(FB.ratio)
 qPCR.dat$Depth <- as.factor(qPCR.dat$Depth)
@@ -1165,8 +1095,6 @@ qPCR.dat$Copy_number_log <- log(qPCR.dat$Copy_number) #file for plots
 FB.ratio$log_FB_ratio <- log(FB.ratio$FB_ratio)
 FB.ratio$ITS_log <- log(FB.ratio$ITS_copies_ng_DNA)
 FB.ratio$x16S_log <- log(FB.ratio$x16s_copies_ng_DNA)
-#exporting logged data
-write.csv(FB.ratio, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/qPCR_R_data.csv")
 ```
 # check for normal distribution
 ```{r}
@@ -1192,7 +1120,6 @@ KW_qPCR_FB.Results <- KW_qPCR_FB.Results[1:2,]
 KW_qPCR_FB.Results["Measure"] <- "F:B ratio"
 
 KW_qPCR_results <- rbind(KW_qPCR_16Slog.Results, KW_qPCR_ITSlog.Results, KW_qPCR_FB.Results)
-write.csv(KW_qPCR_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR//KW_qPCR.csv")
 ```
 #performing and plotting Dunn's post hoc tests to identify depth increments with sig dif alpha diversity
 ```{r, fig.height=10, fig.width=7}
@@ -1202,7 +1129,6 @@ KW_qPCR$Depth <- as.factor(KW_qPCR$Depth)
 KW_qPCR_Chao1 <- kwPlot(KW_qPCR$x16S_log, KW_qPCR$Depth, strip = FALSE, notch = FALSE, omm = FALSE, posthoc = TRUE, adjust = "bonferroni")
 KW_qPCR_Shannon <- kwPlot(KW_qPCR$ITS_log, KW_qPCR$Depth, strip = FALSE, notch = FALSE, omm = FALSE, posthoc = TRUE, adjust = "bonferroni")
 ```
-
 # summary SE function
 ```{r}
 summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
@@ -1313,13 +1239,6 @@ CopyNum_plot <- ggplot(Copy_number_log_summary, aes(x=Depth, y=Copy_number_log, 
         scale_linetype_discrete(name="Microbe")
 CopyNum_plot <- CopyNum_plot + text_theme
 ```
-
-```{r}
-microbial_diversity_abundance_plots <- chao1_plot + shannon_plot + Evenness_plot + CopyNum_plot 
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/microbial_diversity_abundance_plots.png", width = 800, height = 600)
-plot(microbial_diversity_abundance_plots)
-```
-
 ##correlating alpha diversity and microbial abundance
 #data prep: need to put together file for microbial diversity, abundance and soil chemical variables
 ```{r}
@@ -1327,10 +1246,8 @@ correlation_data <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil
 row.names(correlation_data) = correlation_data$SampleID
 correlation_data = correlation_data[-1:-2] #deleting random extra column at end of dataframe
 ```
-
 ```{r}
 correlation.tests <- corr.test(correlation_data, method = "spearman", adjust = "bonferroni", alpha = .05, normal = FALSE, ci=FALSE)
-
 cor.R <- correlation.tests$r
 cor.P <- correlation.tests$p
 cor.P <- Matrix::forceSymmetric(cor.P, uplo="U") #make matrix symmetric using upper values (adjusted P values)
@@ -1341,14 +1258,13 @@ Correlation_matrix = cor(cor.R)
 row.names(Correlation_matrix) = c("ITS Chao1", "ITS Shannon", "16S Chao1", "16S Shannon", "F:B ratio", "log[ITS copies]", "log[16S copies]", "Soil pH", "Total C", "Total N", "C:N ratio", "Bray P", "Exch K", "Exch Ca", "Exch Mg", "Exch Na", "CEC", "Bulk density", "Delta 13C", "Radiocarbon 14C")
 colnames(Correlation_matrix) = c("ITS Chao1", "ITS Shannon", "16S Chao1", "16S Shannon", "F:B ratio", "log[ITS copies]", "log[16S copies]", "Soil pH", "Total C", "Total N", "C:N ratio", "Bray P", "Exch K", "Exch Ca", "Exch Mg", "Exch Na", "CEC", "Bulk density", "Delta 13C", "Radiocarbon 14C")
 col = colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA")) 
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/corrplot.png", width = 700, height = 700)
 corrplot(Correlation_matrix, method = 'color', addCoef.col = "black", type = "lower", p.mat = cor.P, sig.level = 0.05, tl.col = "black", insig = "blank", col = col(100), number.cex = .9, cl.cex=1) 
 ```
 
 ## microbial biomass allocation plots
 ```{r}
-x16s_allocation <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/biomass%_16S.csv")
-ITS_allocation <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/biomass%_ITS.csv")
+x16s_allocation <- read.csv("biomass%_16S.csv")
+ITS_allocation <- read.csv("biomass%_ITS.csv")
 colnames(x16s_allocation) = c("Depth", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18")
 colnames(ITS_allocation) = c("Depth", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18")
 
@@ -1386,21 +1302,13 @@ ITS_allocation_plot <- ggplot(ITS_allocation.m, aes(x= variable, y=value, fill= 
     scale_fill_manual(values = c("#543005", "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3", "#c7eae5", "#80cdc1", "#35978f", "#01665e", "#003c30"))+
     text_theme
 ```
-## combine plots
-```{r}
-x16S_allocation_plot <- x16S_allocation_plot + theme(legend.position = "none")
-biomass_plot <- x16S_allocation_plot + ITS_allocation_plot
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/qPCR/Microbial_biomass.png", width = 800, height = 400)
-plot(biomass_plot)
-```
-
 ## analysis of picrust2 functional predictions on 16S data. This is for supplementary and to reference briefly in results.
 ```{r}
 #using metacyc data
-METCYC.dat <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/metacyc_pathways.csv")
+METCYC.dat <- read.csv("metacyc_pathways.csv")
 row.names(METCYC.dat) = METCYC.dat$MetaCyc_Pathway
 METCYC.dat = METCYC.dat[,-1]
-sample_data <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/picrust_sample_data.csv")
+sample_data <- read.csv("picrust_sample_data.csv")
 rownames(sample_data) = sample_data$ï..SampleID
 ```
 # create phyloseq object
@@ -1429,7 +1337,6 @@ metacyc.alpha$Evenness = evenness #calculating evenness
 sample.dat.metacyc <- sample_data(METCYC.physeq)
 metacyc.alpha.dat <- merge(metacyc.alpha, sample.dat.metacyc, by=0, all = TRUE)
 row.names(metacyc.alpha.dat) = metacyc.alpha.dat$Row.names
-write.csv(metacyc.alpha.dat, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/AlphaDiversity_Metacyc.csv")
 ```
 #KW wallis tests
 ```{r}
@@ -1458,7 +1365,6 @@ KW_metacyc_Evenness.Results <- KW_metacyc_Evenness.Results[4:6,]
 KW_metacyc_Evenness.Results["Metric"] <- "Evenness"
 
 KW_metacyc_results <- rbind(KW_metacyc_chao1.Results, KW_metacyc_Shannon.Results, KW_metacyc_Evenness.Results)
-write.csv(KW_16S_results, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/KW_metacyc_results.csv")
 ```
 #performing and plotting Dunn's post hoc tests to identify depth increments with sig dif alpha diversity
 ```{r, fig.height=10, fig.width=7}
@@ -1511,11 +1417,6 @@ evenness_plot.MC <- ggplot(Evenness_summary.MC, aes(x=Depth, y=Evenness, group=1
   theme(legend.position = "none")
 evenness_plot.MC <- evenness_plot.MC + text_theme
 ```
-```{r merge and export plots}
-metacyc.alpha.plots <- chao1_plot.MC + shannon_plot.MC + evenness_plot.MC
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/MetaCyc_alpha.png", width = 800, height = 400)
-plot(metacyc.alpha.plots)
-```
 # beta diversity 
 ```{r}
 Metacyc.bray.curtis = phyloseq::distance(MetaCyc.physeq.RA, method = "bray") #calculating bray curtis distance matrix
@@ -1525,8 +1426,6 @@ Metacyc.nmds= phyloseq::ordinate(MetaCyc.physeq.RA, method = "NMDS", distance= M
 ```{r}
 bray.data.metacyc = data.frame(sample_data(MetaCyc.physeq.RA))
 adonis.metacyc <- adonis(Metacyc.bray.curtis ~ Depth + Transect + PCR, data= bray.data.metacyc)
-adonis.metacyc
-write.csv(adonis.metacyc$aov.tab, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/Permanova_Metacyc.csv")
 ```
 ```{r}
 Metacyc.nmds.plot = plot_ordination(MetaCyc.physeq.RA, Metacyc.nmds, type="samples", color = "Depth") 
@@ -1545,12 +1444,10 @@ Metacyc.nmds.plot = Metacyc.nmds.plot +
   legend.key=element_blank()) + 
   labs(x = "NMDS1", colour = "Soil depth (cm)", y = "NMDS2", shape = "Type", title = "MetaCyc NMDS")
 Metacyc.nmds.plot
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/MetaCyc_nmds.png", width = 600, height = 500)
-plot(Metacyc.nmds.plot)
 ```
 # correlating with envrionmental variables
 ```{r}
-environ.data.metacyc <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/Analysis/picrust_sample_data.csv")
+environ.data.metacyc <- read.csv("picrust_sample_data.csv")
 rownames(environ.data.metacyc) <- environ.data.metacyc$ï..SampleID
 environ.data.metacyc <- na.omit(environ.data.metacyc)
 environ.data.metacyc2 <- environ.data.metacyc[,c(3,5:17)]
@@ -1567,9 +1464,7 @@ Metacyc.community.mat <- vegdist(Metacyc.community2) #calculate bray curtis
 Mantel.metacyc <- lapply(Metacyc.env.EU, function(x) vegan::mantel(x, Metacyc.community.mat, method="spearman", permutations = 999)) #perform mantel tests
 Mantel.metacyc.Results <- data.frame(Mantel.metacyc = sapply(Mantel.metacyc, function(x) x$statistic),
            p.value = sapply(Mantel.metacyc, function(x) x$signif))
-#write.csv(Mantel.metacyc.Results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/Mantel.metacyc.Results.csv")
 ```
-
 ##nmds plots with envfit
 ```{r}
 nmds.MetaCyc2 <- vegan::metaMDS(Metacyc.community.mat)
@@ -1606,9 +1501,6 @@ gg_MetaCyc.envfit = ggplot(data = data.scores_MetaCyc, aes(x = NMDS1, y = NMDS2)
              label = row.names(en_coord_cont_MetaCyc), size = 5, face = "bold") + 
              geom_segment(aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), data = en_coord_cont_MetaCyc, size =1, alpha = 0.5, colour = "black")
 gg_MetaCyc.envfit
-
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/MetaCyc_envfit.png", width = 600, height = 500)
-plot(gg_MetaCyc.envfit)
 ```
 ##ANCOM-BC on metacyc pathways
 ```{r }
@@ -1625,7 +1517,6 @@ ancom_metacyc_results['SE'] <- res$se
 ancom_metacyc_results['p.adj'] <- res$q_val #putting p adj into dataframe
 ancom_metacyc_results['diff.abund'] <- res$diff_abn
 colnames(ancom_metacyc_results)[1] <- "Beta_value"
-write.csv(ancom_metacyc_results, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/ancom_metacyc_results.csv")
 ```
 #ANCOM metacyc waterfall plot
 ```{r}
@@ -1648,9 +1539,6 @@ legend.text = element_text(size = 10, face ="bold", colour ="black"),
 axis.title.x = element_text(face = "bold", size = 10, colour = "black"), 
 axis.title.y = element_text(face = "bold", size = 10, colour = "black"), 
 legend.title = element_text(size = 10, colour = "black", face = "bold"))
-
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/16S/16S_analysis_outputs/Picrust analysis/pathways_out/MetaCyc_ANCOM.png", width = 500, height = 800)
-plot(Ancom_metacyc_plot)
 ```
 
 ##correlating microbial taxa (phyla to family level) with soil physicochemical properties
@@ -1663,7 +1551,6 @@ OrderLogObs16S = log(abundances(order_data_16S) + 1) # Add pesudo-count (1) to a
 OrderLogObs16S = t(t(OrderLogObs16S) - OrderSampleFrac_16S) # Adjust the log observed abundances
 
 logObs_16S_Order = data.frame(OrderLogObs16S)#log observed abundances
-write.csv(logObs_16S_Order,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_16S_Order.csv")
 
 OrderSampleFrac_ITS = ancom_order_ITS$samp_frac
 OrderSampleFrac_ITS[is.na(OrderSampleFrac_ITS)] = 0  # Replace NA with 0
@@ -1671,7 +1558,6 @@ OrderLogObsITS = log(abundances(order_data_ITS) + 1) # Add pesudo-count (1) to a
 OrderLogObsITS = t(t(OrderLogObsITS) - OrderSampleFrac_ITS) # Adjust the log observed abundances
 
 logObs_ITS_Order = data.frame(OrderLogObsITS)#log observed abundances
-write.csv(logObs_ITS_Order,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_ITS_Order.csv")
 ```
 
 ```{r ITS and 16S phyla data prep}
@@ -1688,7 +1574,6 @@ correlation_data.taxa2 <- merge(correlation_Orders, correlation_data.taxa, by="S
 rownames(correlation_data.taxa2) = correlation_data.taxa2$Row.names
 correlation_data.taxa2 = correlation_data.taxa2[,-1:-2]
 ```
-
 #class level
 ```{r}
 ClassSampleFrac_16S = ancom_class_16S$samp_frac
@@ -1697,7 +1582,6 @@ ClassLogObs16S = log(abundances(class_data_16S) + 1) # Add pesudo-count (1) to a
 ClassLogObs16S = t(t(ClassLogObs16S) - ClassSampleFrac_16S) # Adjust the log observed abundances
 
 logObs_16S_Class = data.frame(ClassLogObs16S)#log observed abundances
-write.csv(logObs_16S_Class,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_16S_Class.csv")
 
 ClassSampleFrac_ITS = ancom_class_ITS$samp_frac
 ClassSampleFrac_ITS[is.na(ClassSampleFrac_ITS)] = 0  # Replace NA with 0
@@ -1705,7 +1589,6 @@ ClassLogObsITS = log(abundances(class_data_ITS) + 1) # Add pesudo-count (1) to a
 ClassLogObsITS = t(t(ClassLogObsITS) - ClassSampleFrac_ITS) # Adjust the log observed abundances
 
 logObs_ITS_Class = data.frame(ClassLogObsITS)#log observed abundances
-write.csv(logObs_ITS_Class,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_ITS_Class.csv")
 ```
 
 ```{r ITS and 16S phyla data prep}
@@ -1730,7 +1613,6 @@ PhylumLogObs16S = log(abundances(phylum_16S) + 1) # Add pesudo-count (1) to avoi
 PhylumLogObs16S = t(t(PhylumLogObs16S) - PhylumSampleFrac_16S) # Adjust the log observed abundances
 
 logObs_16S_Phylum = data.frame(PhylumLogObs16S)#log observed abundances
-write.csv(logObs_16S_Phylum,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_16S_Phylum.csv")
 
 PhylumSampleFrac_ITS = ancom_phylum_ITS$samp_frac
 PhylumSampleFrac_ITS[is.na(PhylumSampleFrac_ITS)] = 0  # Replace NA with 0
@@ -1738,9 +1620,7 @@ PhylumLogObsITS = log(abundances(phylum_ITS) + 1) # Add pesudo-count (1) to avoi
 PhylumLogObsITS = t(t(PhylumLogObsITS) - PhylumSampleFrac_ITS) # Adjust the log observed abundances
 
 logObs_ITS_Phylum = data.frame(PhylumLogObsITS)#log observed abundances
-write.csv(logObs_ITS_Phylum,"//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/logabs_ITS_Phylum.csv")
 ```
-
 ```{r ITS and 16S phyla data prep}
 logObs_16S_Phylum2 = t(logObs_16S_Phylum)
 logObs_ITS_Phylum2 = t(logObs_ITS_Phylum)
@@ -1780,7 +1660,6 @@ Orders_cor.P <- Orders_cor.P[!(row.names(Orders_cor.P) %in% rows_to_remove), ]
 ##set non significant values to 0
 Orders_cor.R[Orders_cor.P > 0.05] <- 0
 Orders_cor.R <- Orders_cor.R[rowSums(Orders_cor.R[])>0,] #remove rows with sum 0 i.e. taxa with no sig correlation
-write.csv(Orders_cor.R, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/Orders_corR.csv")
 ```
 #class
 ```{r}
@@ -1799,7 +1678,6 @@ Class_cor.P <- Class_cor.P[!(row.names(Class_cor.P) %in% rows_to_remove), ]
 ##set non significant values to 0
 Class_cor.R[Class_cor.P > 0.05] <- 0
 Class_cor.R <- Class_cor.R[rowSums(Class_cor.R[])>0,] #remove rows with sum 0 i.e. taxa with no sig correlation
-write.csv(Class_cor.R, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/Class_corR.csv")
 ```
 #phyla
 ```{r}
@@ -1818,7 +1696,6 @@ Phyla_cor.P <- Phyla_cor.P[!(row.names(Phyla_cor.P) %in% rows_to_remove), ]
 ##set non significant values to 0
 Phyla_cor.R[Phyla_cor.P > 0.05] <- 0
 Phyla_cor.R <- Phyla_cor.R[rowSums(Phyla_cor.R[])>0,] #remove rows with sum 0 i.e. taxa with no sig correlation
-write.csv(Phyla_cor.R, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/DNA/MicrobialTaxa_Correlations/Phyla_corR.csv")
 ```
 
 #plot correlation: orders
@@ -1828,7 +1705,6 @@ colnames(Orders_cor.R) <- c("pH", "Total C", "Total N","C:N","Bray P", "Exch K",
 rownames(Orders_cor.R) <- c("Candidatus_Koribacter", "Edaphobacter", "Terriglobus", "Acidobacteria_Gp1_unk.", "Candidatus_Solibacter", "Armatimonadetes_Gp4_unk.", "Sphingobacteriales", "Chlamydiales", "Ktedonobacterales", "Bacillales", "Nitrospirales", "Alphaproteobacteria_unk.", "Subdivision3_unk.", "Helotiales", "Pezizales", "Chaetosphaeriales", "Ascomycota_unk.", "Thelephorales", "Microbotryomycetes_ord_inc_sedis", "Filobasidiales", "Tremellales", "Umbelopsidales", "Rozellomycota_unk.")
 Orders_cor.R <- as.matrix(Orders_cor.R)
 Orders_cor.R <- t(Orders_cor.R)
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/OrdersCorrplot.png", width = 900, height = 800)
 corrplot::corrplot(Orders_cor.R, is.corr=FALSE, method = 'color', outline= TRUE, type = "full", col = col(100), tl.col = "black", addCoef.col = "black") 
 ```
 #plot correlation: classes
@@ -1838,7 +1714,6 @@ colnames(Class_cor.R) <- c("pH", "Total C", "Total N","C:N","Bray P", "Exch K", 
 rownames(Class_cor.R) <- c("Acidobacteria_Gp1", "Acidobacteria_Gp10", "Acidobacteria_Gp16", "Acidobacteria_Gp3", "Acidobacteria_Gp5", "Cytophagia", "Sphingobacteriia", "candidate_division_WPS-2_unk.", "Chlamydiia", "Ktedonobacteria", "Chloroflexi_unk.", "Bacilli",  "Gemmatimonadetes", "Latescibacteria_unk.", "Nitrospira", "Spartobacteria", "Subdivision3", "Leotiomycetes","Pezizomycetes", "Ascomycota_unk.", "Microbotryomycetes", "Tremellomycetes", "Umbelopsidomycetes", "Rozellomycota_unk.")
 Class_cor.R <- as.matrix(Class_cor.R)
 Class_cor.R <- t(Class_cor.R)
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/ClassesCorrplot.png", width = 900, height = 600)
 corrplot::corrplot(Class_cor.R, is.corr=FALSE, method = 'color', outline= TRUE, addCoef.col = "black", type = "full", col = col(100), tl.col = "black") 
 ```
 #plot correlation: phyla
@@ -1848,7 +1723,6 @@ colnames(Phyla_cor.R) <- c("pH", "Total C", "Total N","C:N","Bray P", "Exch K", 
 rownames(Phyla_cor.R) <- c("Bacteroidetes", "candidate_division_WPS-2", "Chlamydiae", "Chloroflexi", "Gemmatimonadetes", "Latescibacteria", "Nitrospirae", "Verrucomicrobia", "Mucoromycota", "Rozellomycota")
 Phyla_cor.R <- as.matrix(Phyla_cor.R)
 Phyla_cor.R <- t(Phyla_cor.R)
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/Supplementary figures/PhylaCorrplot.png", width = 900, height = 600)
 corrplot::corrplot(Phyla_cor.R, is.corr=FALSE, method = 'color', outline= TRUE, addCoef.col = "black", type = "full", col = col(100), tl.col = "black") 
 ```
 
