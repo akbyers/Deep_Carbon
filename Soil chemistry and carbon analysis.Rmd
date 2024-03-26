@@ -25,7 +25,6 @@ library(reshape2)
 library(tidyr)
 library(multcompView)
 library(forcats)
-
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
@@ -34,8 +33,7 @@ library(broom)
 
 ##plotting carbon stocks as stacked bar plot
 ```{r read in carbon data}
-C_stocks <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Carbon stocks/Carbon_stocks_both_fractions.csv") #data showing % of total soil profile's C allocated to each depth increment
-View(C_stocks)
+C_stocks <- read.csv("~/Carbon_stocks_both_fractions.csv") #data showing % of total soil profile's C allocated to each depth increment
 colnames(C_stocks) = c("Depth", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18")
 
 #melt dataframe into long format
@@ -59,19 +57,15 @@ area_plot <- ggplot(C_stocks.m, aes(x= variable, y=value, fill= Depth, group= De
 ```
 #C stock allocation plot
 ```{r}
-#exporting plot
-png(file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/C_allocation.png", width = 1200, height = 500)
-
 ##combine with microbial biomass plots
 x16S_allocation_plot2 <- x16S_allocation_plot + theme(legend.position = "none")
 biomass_plot <- area_plot + x16S_allocation_plot2 + ITS_allocation_plot  
 plot(biomass_plot)
 ```
 ##anova tests on chemistry data
-
 #read in chemistry data
 ```{r load files}
-chemistry.data <- read.csv("//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Soil chemistry/Soil_chemistry_working_datasheet.csv")
+chemistry.data <- read.csv("~/Soil_chemistry_working_datasheet.csv")
 chemistry.data <- chemistry.data[1:100,]
 chemistry.data$Depth <- as.factor(chemistry.data$Depth)
 chemistry.data[chemistry.data == ">Modern"] <- "0"
@@ -120,22 +114,16 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 ```{r}
 chemistry_aov <- lapply(chemistry.data[4:18], function(x) aov(x ~ chemistry.data$Depth))
 chemistry_aov2 <- lapply(chemistry_aov, summary)
-capture.output(chemistry_aov2, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Soil chemistry/R files/ANOVA_depth.csv")
 chemistry_aov3 <- lapply(chemistry.data[4:18], function(x) aov(x ~ chemistry.data$Transect))
 chemistry_aov4 <- lapply(chemistry_aov3, summary)
-capture.output(chemistry_aov2, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Soil chemistry/R files/ANOVA_transect.csv")
 ```
 #multiple comparisons
 ```{r}
 chemistry_Tukey <- lapply(chemistry_aov, TukeyHSD)
 chemistry_Letters <- lapply(chemistry_Tukey, function(x) multcompLetters(x$`chemistry.data$Depth`[,4]))
-capture.output(chemistry_Letters, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Soil chemistry/R files/Tukey_byDepth.csv")
 chemistry_Tukey2 <- lapply(chemistry_aov3, TukeyHSD)
 chemistry_Letters2 <- lapply(chemistry_Tukey2, function(x) multcompLetters(x$`chemistry.data$Transect`[,4]))
-capture.output(chemistry_Letters2, file = "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/Soil chemistry/R files/Tukey_byTransect.csv")
 ```
-
-
 # delta 13C summary
 ```{r}
 Delta13C <- summarySE(chemistry.data, measurevar="Delta_13C", groupvars=c("Depth"), na.rm = TRUE)
@@ -148,7 +136,6 @@ Total_C <- summarySE(chemistry.data, measurevar="Total_C", groupvars=c("Depth"),
 Total_C['Measurement'] <- "Total_C"
 colnames(Total_C)[3] <- "Mean"
 ```
-
 #radiocarbon summary
 ```{r}
 radiocarbon <- summarySE(chemistry.data, measurevar="Radiocarbon_14C", groupvars=c("Depth"), na.rm = TRUE)
@@ -162,13 +149,8 @@ radiocarbonAge <- summarySE(chemistry.data, measurevar="CRA", groupvars=c("Depth
 radiocarbonAge['Measurement'] <- "CRA"
 colnames(radiocarbonAge)[3] <- "Mean"
 ```
-#combine and export
-```{r}
-stableAndRadiocarbon <- rbind(Delta13C, radiocarbon, radiocarbonAge, Total_C)
-write.csv(stableAndRadiocarbon, "//scionfile/data/Carbon & Climate Change/Deep soil C/Data & Results/Lab data/13C and Radiocarbon/Datafiles/DataSummary.csv")
-```
-##the anova/tukey HSD tests for this dataframe were performed above in the prior ANOVA tests in this script.
 
+##the anova/tukey HSD tests for this dataframe were performed above in the prior ANOVA tests in this script.
 #total C
 ```{r}
 Total_C$Depth <- factor(Total_C$Depth, levels=c("0 to 10", "10 to 20", "20 to 30", "30 to 40",  "40 to 50",  "50 to 60",  "60 to 70" , "70 to 80",  "80 to 90" , "90 to 100"))
@@ -182,8 +164,6 @@ TotalC.plot <- ggplot(Total_C, aes(x= fct_rev(Depth), y= Mean) ) +
   text_theme
 TotalC.plot <- TotalC.plot + coord_flip()
 ```
-
-
 #delta 13C plot
 ```{r}
 Delta13C$Depth <- factor(Delta13C$Depth, levels=c("0 to 10", "10 to 20", "20 to 30", "30 to 40",  "40 to 50",  "50 to 60",  "60 to 70" , "70 to 80",  "80 to 90" , "90 to 100"))
@@ -210,7 +190,6 @@ x14C.plot <- ggplot(radiocarbon, aes(x= fct_rev(Depth), y= Mean) ) +
   text_theme
 x14C.plot <- x14C.plot + coord_flip()
 ```
-
 #radiocarbon age
 ```{r}
 radiocarbonAge$Depth <- factor(radiocarbonAge$Depth, levels=c("0 to 10", "10 to 20", "20 to 30", "30 to 40",  "40 to 50",  "50 to 60",  "60 to 70" , "70 to 80",  "80 to 90" , "90 to 100"))
@@ -224,15 +203,6 @@ CRA.plot <- ggplot(radiocarbonAge, aes(x= fct_rev(Depth), y= Mean) ) +
   text_theme
 CRA.plot <- CRA.plot + coord_flip()
 ```
-
-##exporting total C, delta 13C, radiocarbon 14C and CRA plots
-```{r merge plots and export}
-carbonPlot <- TotalC.plot + Delta13C.plot + x14C.plot + CRA.plot
-
-png("//scionfile/data/Carbon & Climate Change/Deep soil C/Submission/Puruki Deep C/Report figures/StableandRadioC.png", width = 600, height = 600)
-plot(carbonPlot)
-```
-
 
 
 
